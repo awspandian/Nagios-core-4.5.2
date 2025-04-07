@@ -1,0 +1,157 @@
+--Nagios server--
+
+    3  sudo apt-get update
+    4  sudo apt-get install -y autoconf gcc libc6 make wget unzip apache2 php libapache2-mod-php libgd-dev ufw
+    5  sudo apt-get install -y openssl libssl-dev
+    6  cd /tmp
+    7  wget -O nagioscore.tar.gz $(wget -q -O - https://api.github.com/repos/NagiosEnterprises/nagioscore/releases/latest  | grep '"browser_download_url":' | grep -o 'https://[^"]*')
+    8  tar xzf nagioscore.tar.gz
+    9  cd /tmp/nagios-*
+   10  sudo ./configure --with-httpd-conf=/etc/apache2/sites-enabled
+   11  sudo make all
+   12  sudo make install-groups-users
+   13  sudo usermod -a -G nagios www-data
+   14  sudo make install
+   15  sudo make install-daemoninit
+   16  sudo make install-commandmode
+   17  sudo make install-config
+   18  sudo make install-webconf
+   19  sudo a2enmod rewrite
+   20  sudo a2enmod cgi
+   21  sudo a2enmod rewrite
+   22  sudo ufw allow Apache
+   23  sudo ufw reload
+   24  sudo service apache2 restart
+   25  sudo systemctl restart apache2.service
+   26  sudo systemctl start nagios.service
+   27  sudo htpasswd -c /usr/local/nagios/etc/htpasswd.users nagiosadmin
+   28  clear
+   29  cd
+   30  sudo apt-get update
+   31  sudo apt-get install -y autoconf gcc libc6 libmcrypt-dev make libssl-dev wget bc gawk dc build-essential snmp libnet-snmp-perl gettext
+   32  sudo apt-get install -y libpqxx3-dev
+   33  sudo apt-get install -y libdbi-dev
+   34  sudo apt-get install -y libmysqlclient-dev
+   35  sudo apt-get install -y dnsutils
+   36  sudo apt-get install -y smbclient
+   37  sudo apt-get install -y qstat
+   38  sudo apt-get install -y fping
+   39  sudo apt-get install -y qmail-tools
+   40  cd /tmp
+   41  wget -O nagios-plugins.tar.gz $(wget -q -O - https://api.github.com/repos/nagios-plugins/nagios-plugins/releases/latest  | grep '"browser_download_url":' | grep -o 'https://[^"]*')
+   42  tar zxf nagios-plugins.tar.gz
+   43  cd /tmp/nagios-plugins-*/
+   44  sudo ./configure
+   45  sudo make
+   46  sudo make install
+   47  sudo systemctl restart nagios
+   48  nagios --version
+   49  sudo nagios --version
+   50  cd ..
+   51  ls
+   52  cd
+   53  sudo apt install nagios-nrpe-server -y
+   54  sudo systemctl restart apache2.service
+   55  sudo systemctl start nagios.service
+   56  history
+   57  sudo htpasswd -c /usr/local/nagios/etc/htpasswd.users nagiosadmin
+   58  cd /usr/local/nagios/
+   59  ls
+   60  cd bin/
+   61  ls
+   62  cat nagios
+   63  cd ..
+   64  ls
+   65  cd etc/
+   66  ls
+   67  vi cgi.cfg
+   68  cat htpasswd.users
+   69  vi nagios.cfg
+   70  vi resource.cfg
+   71  sudo vi resource.cfg
+   72  cd objects/
+   73  ls
+   74  vi commands.cfg
+   75  vi localhost.cfg
+   76  vi templates.cfg
+   77  vi timeperiods.cfg
+   78  cd ..
+   79  ls
+   80  sudo vi resource.cfg
+   81  ls
+   82  sudo nano /usr/local/nagios/etc/objects/hosts.cfg
+   83  ls
+   84  cd objects/
+   85  ls
+   86  cat hosts.cfg
+   87  sudo mv hosts.cfg web1.cfg
+   88  pwd
+   89  cd ..
+   90  ls
+   91  vi nagios.cfg
+   92  sudo vi nagios.cfg
+   93  sudo systemctl restart nagios
+   94  sudo vi nagios.cfg
+   95  cd objects/
+   96  sudo vi web1.cfg
+   97  sudo systemctl restart nagios
+   98  sudo vi web1.cfg
+   99  sudo systemctl restart nagios
+  100  sudo vi web1.cfg
+  101  sudo systemctl restart nagios
+  102  sudo vi web1.cfg
+  103  sudo systemctl restart nagios
+  104  sudo vi web1.cfg
+  105  sudo systemctl restart nagios
+  106  sudo vi web1.cfg
+  107  sudo systemctl restart nagios  
+
+--Client--
+    3  sudo apt update
+    4  sudo apt install nagios-nrpe-server -y
+    5  sudo vi /etc/nagios/nrpe.cfg
+    6  sudo systemctl start nagios-nrpe-server
+
+##web1.cfg
+define host {
+    use                     linux-server
+    host_name               web1
+    alias                   web
+    address                 172.31.37.103
+    max_check_attempts      5
+    check_period            24x7
+    notification_interval   30
+    notification_period     24x7
+}
+define service {
+    use                     generic-service
+    host_name               web1
+    service_description     PING
+    check_command           check_ping!100.0,20%!500.0,60%
+    max_check_attempts      5
+    normal_check_interval   5
+    retry_check_interval    1
+    check_period            24x7
+    notification_interval   30
+    notification_period     24x7
+}
+define service{
+        use                             local-service         ; Name of service template to use
+        host_name                       web1
+        service_description             Root Partition
+        check_command                   check_local_disk!20%!10%!/
+        }
+
+define service{
+        use                             local-service         ; Name of service template to use
+        host_name                       web1
+        service_description             Current Users
+        check_command                   check_local_users!20!50
+      }
+define service{
+        use                             local-service         ; Name of service template to use
+        host_name                       web1
+        service_description             Total Processes
+        check_command                   check_local_procs!250!400!RSZDT
+        }
+
